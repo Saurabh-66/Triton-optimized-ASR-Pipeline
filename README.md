@@ -4,7 +4,7 @@ A GPU-accelerated automatic speech recognition pipeline built on top of
 [GLM-ASR](https://huggingface.co/zai-org/glm-asr) (by zai-org / THUDM),
 optimized using custom [Triton](https://github.com/openai/triton) kernels
 to reduce inference latency by **3.7× (72.2% speedup)** over the baseline
-PyTorch implementation — from **1480ms → 399ms** - while maintaining
+PyTorch implementation - from **1480ms → 399ms** - while maintaining
 **100% transcription accuracy** on LibriSpeech test-clean.
 
 ---
@@ -119,10 +119,10 @@ no spill, achieving 1.35–2.06× speedups.
 
 ### Profiling Notes
 
-Tested on **Edinburgh HPC** (NVIDIA H200 MIG 1g.18gb slice — 16 SMs,
+Tested on **Edinburgh HPC** (NVIDIA H200 MIG 1g.18gb slice - 16 SMs,
 ~8.1 TFLOPS FP32 peak, ~580 GB/s HBM bandwidth, ridge point 14.0 FLOPs/byte).
-All decode-time kernels operate at AI < 0.63 FLOPs/byte — ~20× below the
-ridge point — confirming the pipeline is uniformly **memory-bound** during
+All decode-time kernels operate at AI < 0.63 FLOPs/byte - ~20× below the
+ridge point - confirming the pipeline is uniformly **memory-bound** during
 autoregressive decoding. The primary optimization lever is therefore reducing
 memory traffic and kernel launch overhead, not compute throughput.
 
@@ -137,12 +137,12 @@ At M=1 decode time, all kernels fall far below the roofline:
 - Attention (score + softmax + output): 0.33–0.50 FLOPs/byte
 - Linear projection (M=1): 0.50 FLOPs/byte
 
-The key bottleneck is not kernel arithmetic throughput — it is Python
+The key bottleneck is not kernel arithmetic throughput - it is Python
 dispatch overhead, host-device synchronization, and HBM round-trips
 between kernel launches. Each decoder layer takes ~1.6ms kernel time,
 yet the observed per-step latency at baseline was 432ms. Kernel execution
 accounts for only ~10% of decode time; the remaining ~90% is Python
-dispatch and memory allocation overhead — making kernel fusion and KV
+dispatch and memory allocation overhead - making kernel fusion and KV
 caching the correct optimization strategies, not throughput maximization.
 
 ---
